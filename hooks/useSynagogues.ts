@@ -57,21 +57,39 @@ export function useSynagogues() {
         if (error) { setLoaded(true); return; }
 
         if (!data || data.length === 0) {
-          // טבלה ריקה — אתחול מ-SYNAGOGUES_INITIAL
+          // טבלה ריקה לחלוטין — העלה הכל מ-SYNAGOGUES_INITIAL
           await supabase!.from('synagogues').upsert(SYNAGOGUES_INITIAL.map(toDB));
           setSynagogues(SYNAGOGUES_INITIAL);
         } else {
-          // מיזוג: אם יש בתי כנסת חדשים ב-INITIAL שחסרים ב-DB — הוסף אותם
+          // בנה את הרשימה: מי שלא אושר → קח מ-SYNAGOGUES_INITIAL (נתונים מלאים)
+          //                  מי שאושר     → קח מ-Supabase (עריכות מנהל)
+          const initialMap = new Map(SYNAGOGUES_INITIAL.map(s => [s.id, s]));
+          const toUpsert: Synagogue[] = [];
+
+          const merged = data.map((row: Record<string, unknown>) => {
+            const dbSyn = fromDB(row);
+            if (!dbSyn.timesConfirmed) {
+              const init = initialMap.get(dbSyn.id);
+              if (init) {
+                // השתמש בנתוני SYNAGOGUES_INITIAL ועדכן ב-Supabase
+                const synToUse = { ...init, editPin: dbSyn.editPin };
+                toUpsert.push(synToUse);
+                return synToUse;
+              }
+            }
+            return dbSyn;
+          });
+
+          // הוסף בתי כנסת חדשים שחסרים
           const dbIds = new Set(data.map((r: { id: number }) => Number(r.id)));
           const missing = SYNAGOGUES_INITIAL.filter(s => !dbIds.has(s.id));
-          if (missing.length > 0) {
-            await supabase!.from('synagogues').upsert(missing.map(toDB));
+          toUpsert.push(...missing);
+
+          if (toUpsert.length > 0) {
+            await supabase!.from('synagogues').upsert(toUpsert.map(toDB));
           }
-          const merged = [
-            ...data.map(fromDB),
-            ...missing,
-          ].sort((a, b) => a.id - b.id);
-          setSynagogues(merged);
+
+          setSynagogues([...merged, ...missing].sort((a, b) => a.id - b.id));
         }
         setLoaded(true);
       });
