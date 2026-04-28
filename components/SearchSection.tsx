@@ -1,16 +1,21 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { calculateDayZmanim, formatTime, type DayZmanim } from '@/lib/zmanim';
+import { calculateDayZmanim, formatTime, resolveSlotTime, type DayZmanim } from '@/lib/zmanim';
 import { PrayerFilter, type FilterKey } from './PrayerFilter';
 import type { Synagogue, PrayerSlot, Shiur } from '@/lib/synagogues';
 
+function addShlitta(name: string): string {
+  if (!name) return '';
+  const n = name.trim();
+  if (n.includes('שליט') || n.includes('זצ') || n.includes('זכ')) return n;
+  return n + ' שליט"א';
+}
 function fmtRav(name: string): string {
   if (!name) return '';
   let n = name.trim();
   if (!n.startsWith('הרב') && !n.startsWith('הרבנית') && !n.startsWith('רב ')) n = 'הרב ' + n;
-  if (!n.includes('שליט') && !n.includes('זצ') && !n.includes('זכ')) n += ' שליט"א';
-  return n;
+  return addShlitta(n);
 }
 
 // ── shiur helpers ─────────────────────────────────────────────────────────
@@ -104,7 +109,7 @@ function minsColor(m: number) {
   return 'text-slate-400';
 }
 
-function buildAllPrayers(synagogues: Synagogue[], shabbat: boolean): PrayerEntry[] {
+function buildAllPrayers(synagogues: Synagogue[], shabbat: boolean, zmanim?: DayZmanim | null): PrayerEntry[] {
   const out: PrayerEntry[] = [];
   for (const syn of synagogues) {
     const sides = [
@@ -124,7 +129,11 @@ function buildAllPrayers(synagogues: Synagogue[], shabbat: boolean): PrayerEntry
     for (const { isShabbat, prayers } of sides) {
       for (const { key, slots } of prayers) {
         for (const slot of (slots ?? [])) {
-          if (slot.time) out.push({ synagogue: syn, prayerKey: key, prayerName: PRAYER_HE[key] ?? key, time: slot.time, desc: slot.desc, mins: minsFromNow(slot.time), isShabbat });
+          // כלול זמנים קבועים וגם יחסיים (נץ, פלג וכו')
+          const resolvedTime = resolveSlotTime(slot, zmanim ?? null);
+          if (resolvedTime) {
+            out.push({ synagogue: syn, prayerKey: key, prayerName: PRAYER_HE[key] ?? key, time: resolvedTime, desc: slot.desc, mins: minsFromNow(resolvedTime), isShabbat });
+          }
         }
       }
     }
@@ -236,7 +245,7 @@ function SynDetail({ syn, onClose, prayerKey, matchTime }: {
       <div className="flex gap-3 flex-wrap mb-3">
         {syn.rabbiName && (
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-slate-400 text-xs">{fmtRav(syn.rabbiName)}</span>
+            <span className="text-slate-400 text-xs">הרב {addShlitta(syn.rabbiName)}</span>
             {syn.rabbiPhone && <a href={`tel:${syn.rabbiPhone}`} className="flex items-center gap-1 text-blue-400 text-xs bg-blue-900/20 border border-blue-700/30 rounded-lg px-2 py-0.5">📞 {syn.rabbiPhone}</a>}
           </div>
         )}
@@ -302,7 +311,7 @@ export function SearchSection({ synagogues, zmanim: zmanimProp, activeFilter, on
 
   useEffect(() => { setZmanim(zmanimProp ?? calculateDayZmanim(new Date())); }, [zmanimProp]);
 
-  const allPrayers = useMemo(() => buildAllPrayers(synagogues, isShabbat), [synagogues, isShabbat]);
+  const allPrayers = useMemo(() => buildAllPrayers(synagogues, isShabbat, zmanim), [synagogues, isShabbat, zmanim]);
 
   const upcoming = useMemo(() =>
     allPrayers.filter(p => p.isShabbat === isShabbat && p.mins >= -10 && p.mins <= 120)

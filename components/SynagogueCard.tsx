@@ -27,7 +27,15 @@ const Tel = ({ phone }: { phone: string }) =>
       </a>
     : null;
 
-// מוסיף "הרב" ו-שליט"א אוטומטית לשמות שעוד אין להם
+// מוסיף שליט"א בלבד (כשה-label "הרב" מוצג בנפרד)
+function addShlitta(name: string): string {
+  if (!name) return '';
+  const n = name.trim();
+  if (n.includes('שליט') || n.includes('זצ') || n.includes('זכ')) return n;
+  return n + ' שליט"א';
+}
+
+// מוסיף "הרב" + שליט"א (לשיעורים ומקומות ללא label)
 function fmtRav(name: string): string {
   if (!name) return '';
   let n = name.trim();
@@ -190,7 +198,7 @@ function DisplayContact({ syn }: { syn: Synagogue }) {
       {syn.rabbiName && (
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-gold-500 text-xs font-semibold shrink-0">הרב</span>
-          <span className="text-slate-200 text-sm">{fmtRav(syn.rabbiName)}</span>
+          <span className="text-slate-200 text-sm">{addShlitta(syn.rabbiName)}</span>
           <Tel phone={syn.rabbiPhone} />
         </div>
       )}

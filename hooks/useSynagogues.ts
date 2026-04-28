@@ -66,12 +66,16 @@ export function useSynagogues() {
           const initialMap = new Map(SYNAGOGUES_INITIAL.map(s => [s.id, s]));
           const toUpsert: Synagogue[] = [];
 
+          const hasData = (syn: Synagogue) =>
+            [...syn.weekday.shacharit, ...syn.weekday.mincha, ...syn.weekday.maariv]
+              .some(s => s.time || s.isRelative);
+
           const merged = data.map((row: Record<string, unknown>) => {
             const dbSyn = fromDB(row);
-            if (!dbSyn.timesConfirmed) {
+            // החלף מ-SYNAGOGUES_INITIAL רק אם הנתונים ב-Supabase ריקים לחלוטין
+            if (!hasData(dbSyn)) {
               const init = initialMap.get(dbSyn.id);
               if (init) {
-                // השתמש בנתוני SYNAGOGUES_INITIAL ועדכן ב-Supabase
                 const synToUse = { ...init, editPin: dbSyn.editPin };
                 toUpsert.push(synToUse);
                 return synToUse;
