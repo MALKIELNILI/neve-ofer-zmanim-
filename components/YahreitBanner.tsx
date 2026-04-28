@@ -78,13 +78,11 @@ export function YahreitBanner({ isAdmin }: { isAdmin: boolean }) {
               title="עבור להלכה היומית">
               📜 הלכה
             </button>
-            {isAdmin ? (
+            {isAdmin && (
               <button onClick={() => setShowAdmin(s => !s)}
                 className="text-slate-600 hover:text-gold-500 text-xs border border-slate-700 hover:border-gold-600/40 rounded-lg px-2.5 py-1 transition-colors">
                 {showAdmin ? '✕' : '✏️'}
               </button>
-            ) : (
-              <span className="text-slate-700 text-xs" title="כניסת מנהל בתחתית המסך">🔒</span>
             )}
           </div>
         </div>

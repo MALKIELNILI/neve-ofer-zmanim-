@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAdmin } from '@/hooks/useAdmin';
 
 export function AdminBar() {
@@ -8,6 +8,13 @@ export function AdminBar() {
   const [open, setOpen] = useState(false);
   const [pin, setPin]   = useState('');
   const [err, setErr]   = useState('');
+
+  // האזן לאירוע סודי מהכתר
+  useEffect(() => {
+    const handler = () => { if (!isAdmin) setOpen(true); };
+    window.addEventListener('open-admin', handler);
+    return () => window.removeEventListener('open-admin', handler);
+  }, [isAdmin]);
 
   const tryLogin = () => {
     if (login(pin)) { setOpen(false); setPin(''); setErr(''); }
@@ -17,27 +24,20 @@ export function AdminBar() {
   return (
     <div className="fixed bottom-5 left-4 z-50">
 
-      {/* Trigger button */}
-      {isAdmin ? (
+      {/* כפתור יציאה — מוצג רק כשמחובר כמנהל */}
+      {isAdmin && (
         <button onClick={logout}
           className="flex items-center gap-1.5 bg-emerald-900/90 border border-emerald-500/40 text-emerald-400 text-xs rounded-full px-3 py-1.5 shadow-lg backdrop-blur-sm hover:bg-emerald-800 transition-colors">
           🔓 מנהל — יציאה
         </button>
-      ) : (
-        <button onClick={() => setOpen(s => !s)}
-          className="text-slate-700 hover:text-slate-500 text-base bg-navy-800/70 border border-slate-700/60 rounded-full px-2.5 py-1.5 shadow-lg backdrop-blur-sm transition-colors"
-          title="כניסת מנהל">
-          🔒
-        </button>
       )}
 
-      {/* PIN modal */}
+      {/* חלון PIN */}
       {open && !isAdmin && (
-        <div className="absolute bottom-12 left-0 bg-navy-700 border border-gold-600/25 rounded-2xl p-5 w-72 shadow-2xl">
+        <div className="absolute bottom-2 left-0 bg-navy-700 border border-gold-600/25 rounded-2xl p-5 w-72 shadow-2xl">
           <p className="text-gold-400 font-bold text-sm mb-1">כניסת מנהל</p>
-          <p className="text-slate-500 text-xs mb-4">רק מנהל האפליקציה יכול לערוך</p>
+          <p className="text-slate-500 text-xs mb-4">הזן קוד גישה</p>
 
-          {/* PIN dots */}
           <input
             type="password"
             inputMode="numeric"

@@ -24,6 +24,13 @@ export function TitleSection() {
         <div className="absolute inset-0 bg-gradient-to-b from-navy-900/20 via-transparent to-navy-900" />
       </div>
 
+      {/* כפתור סודי על הכתר — גישת מנהל */}
+      <button
+        onClick={() => window.dispatchEvent(new CustomEvent('open-admin'))}
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-16 opacity-0 cursor-default z-10"
+        aria-hidden="true"
+      />
+
       {/* Settings button */}
       <button onClick={() => setShowPicker(s => !s)}
         className="absolute top-3 left-3 text-slate-600 hover:text-slate-400 text-lg bg-navy-900/60 rounded-lg p-1.5 transition-colors"
