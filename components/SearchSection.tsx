@@ -5,6 +5,14 @@ import { calculateDayZmanim, formatTime, type DayZmanim } from '@/lib/zmanim';
 import { PrayerFilter, type FilterKey } from './PrayerFilter';
 import type { Synagogue, PrayerSlot, Shiur } from '@/lib/synagogues';
 
+function fmtRav(name: string): string {
+  if (!name) return '';
+  let n = name.trim();
+  if (!n.startsWith('הרב') && !n.startsWith('הרבנית') && !n.startsWith('רב ')) n = 'הרב ' + n;
+  if (!n.includes('שליט') && !n.includes('זצ') && !n.includes('זכ')) n += ' שליט"א';
+  return n;
+}
+
 // ── shiur helpers ─────────────────────────────────────────────────────────
 const DAY_LETTERS: Record<string, number> = { 'א': 0, 'ב': 1, 'ג': 2, 'ד': 3, 'ה': 4, 'ו': 5 };
 const DAY_NAMES_HE = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
@@ -227,15 +235,15 @@ function SynDetail({ syn, onClose, prayerKey, matchTime }: {
 
       <div className="flex gap-3 flex-wrap mb-3">
         {syn.rabbiName && (
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-400 text-xs">הרב {syn.rabbiName}</span>
-            {syn.rabbiPhone && <a href={`tel:${syn.rabbiPhone}`} className="text-blue-400 text-xs">📞</a>}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-slate-400 text-xs">{fmtRav(syn.rabbiName)}</span>
+            {syn.rabbiPhone && <a href={`tel:${syn.rabbiPhone}`} className="flex items-center gap-1 text-blue-400 text-xs bg-blue-900/20 border border-blue-700/30 rounded-lg px-2 py-0.5">📞 {syn.rabbiPhone}</a>}
           </div>
         )}
         {syn.gabbaiName && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-slate-400 text-xs">גבאי {syn.gabbaiName}</span>
-            {syn.gabbaiPhone && <a href={`tel:${syn.gabbaiPhone}`} className="text-blue-400 text-xs">📞</a>}
+            {syn.gabbaiPhone && <a href={`tel:${syn.gabbaiPhone}`} className="flex items-center gap-1 text-blue-400 text-xs bg-blue-900/20 border border-blue-700/30 rounded-lg px-2 py-0.5">📞 {syn.gabbaiPhone}</a>}
           </div>
         )}
       </div>

@@ -22,8 +22,26 @@ const MINYAN_LETTERS = ['א', 'ב', 'ג', 'ד', 'ה'];
 // ── helpers ────────────────────────────────────────────────────────────────
 const Tel = ({ phone }: { phone: string }) =>
   phone
-    ? <a href={`tel:${phone}`} className="text-blue-400 hover:text-blue-300 text-xs">{phone} 📞</a>
+    ? <a href={`tel:${phone}`} className="flex items-center gap-1 text-blue-400 hover:text-blue-300 text-xs bg-blue-900/20 border border-blue-700/30 rounded-lg px-2 py-0.5 transition-colors">
+        📞 {phone}
+      </a>
     : null;
+
+// מוסיף "הרב" ו-שליט"א אוטומטית לשמות שעוד אין להם
+function fmtRav(name: string): string {
+  if (!name) return '';
+  let n = name.trim();
+  if (!n.startsWith('הרב') && !n.startsWith('הרבנית') && !n.startsWith('רב ')) n = 'הרב ' + n;
+  if (!n.includes('שליט') && !n.includes('זצ') && !n.includes('זכ')) n += ' שליט"א';
+  return n;
+}
+
+function fmtLecturer(name: string): string {
+  if (!name) return '';
+  const skip = ['אברכי', 'ממתחלף', 'תלמידי', 'כולל', 'רב מתחלף'];
+  if (skip.some(w => name.includes(w))) return name;
+  return fmtRav(name);
+}
 
 const Badge = ({ text }: { text: string }) =>
   text
@@ -168,17 +186,17 @@ export function SynagogueCard({ synagogue: syn, isAdmin, gabbaiOf, zmanim, onUpd
 function DisplayContact({ syn }: { syn: Synagogue }) {
   if (!syn.rabbiName && !syn.gabbaiName) return null;
   return (
-    <div className="space-y-1.5 pb-1">
+    <div className="space-y-2 pb-1">
       {syn.rabbiName && (
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-gold-500 text-xs font-semibold w-8">הרב</span>
-          <span className="text-slate-200 text-sm">{syn.rabbiName}</span>
+          <span className="text-gold-500 text-xs font-semibold shrink-0">הרב</span>
+          <span className="text-slate-200 text-sm">{fmtRav(syn.rabbiName)}</span>
           <Tel phone={syn.rabbiPhone} />
         </div>
       )}
       {syn.gabbaiName && (
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-gold-500 text-xs font-semibold w-8">גבאי</span>
+          <span className="text-gold-500 text-xs font-semibold shrink-0">גבאי</span>
           <span className="text-slate-200 text-sm">{syn.gabbaiName}</span>
           <Tel phone={syn.gabbaiPhone} />
         </div>
@@ -234,7 +252,7 @@ function ShiurDisplay({ shiurim }: { shiurim: Shiur[] }) {
         <div key={sh.id} className="bg-navy-800/60 rounded-lg px-3 py-2 flex items-start justify-between">
           <div>
             <p className="text-white text-sm font-medium">{sh.name}</p>
-            {sh.lecturer && <p className="text-gold-500 text-xs">מעביר: {sh.lecturer}</p>}
+            {sh.lecturer && <p className="text-gold-500 text-xs">{fmtLecturer(sh.lecturer)}</p>}
             {sh.desc && <p className="text-slate-500 text-xs">{sh.desc}</p>}
           </div>
           <div className="text-left">

@@ -45,12 +45,31 @@ function mk(id: number, name: string, address = ''): Synagogue {
   };
 }
 
-export const DATA_VERSION = 4;
+export const DATA_VERSION = 5;
 
 export const SYNAGOGUES_INITIAL: Synagogue[] = [
 
-  // 1 — אלי בעזרי
-  mk(1, 'אלי בעזרי'),
+  // 1 — אלי בעזרי (רש"י למעלה — קומה ב', צוני 11)
+  {
+    ...mk(1, 'אלי בעזרי', 'צוני 11'),
+    weekday: {
+      shacharit: [netz('קורבנות'), s('07:15','קורבנות')],
+      mincha:    [empty()],
+      maariv:    [empty()],
+    },
+    shabbat: {
+      minchaErevShabbat: [empty()],
+      kabbalatShabbat:   [empty()],
+      shacharit:         [empty()],
+      mincha:            [empty()],
+      maariv:            [empty()],
+    },
+    shiurim: [
+      sh('alib-1', 'עונג שבת',   'הרב מנשה עובדיה שליט"א',  'שבת',  '22:00', 'קומה ב\''),
+      sh('alib-2', 'שיעור שבת',  'הרב מאור עובדיה שליט"א',  'שבת',  '16:30', 'עד 17:30'),
+      sh('alib-3', 'שיעור שבת',  'רב מתחלף',                 'שבת',  '14:00', 'עד 15:00'),
+    ],
+  },
 
   // 2 — רש"י (צוני 11)
   {
