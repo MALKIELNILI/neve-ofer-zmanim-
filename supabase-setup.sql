@@ -19,6 +19,7 @@ CREATE TABLE synagogues (
   weekday_prayers   JSONB            DEFAULT '{"shacharit":[{"time":"","desc":""}],"mincha":[{"time":"","desc":""}],"maariv":[{"time":"","desc":""}]}'::jsonb,
   shabbat_prayers   JSONB            DEFAULT '{"minchaErevShabbat":[{"time":"","desc":""}],"kabbalatShabbat":[{"time":"","desc":""}],"shacharit":[{"time":"","desc":""}],"mincha":[{"time":"","desc":""}],"maariv":[{"time":"","desc":""}]}'::jsonb,
   shiurim           JSONB            DEFAULT '[]'::jsonb,
+  edit_pin          TEXT             DEFAULT NULL,
   times_confirmed   BOOLEAN          DEFAULT false,
   times_updated_at  TIMESTAMPTZ,
   created_at        TIMESTAMPTZ      DEFAULT NOW()

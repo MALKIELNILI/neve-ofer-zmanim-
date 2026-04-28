@@ -11,6 +11,7 @@ interface Props {
   onUpdate: (id: number, payload: UpdatePayload) => void;
   loaded: boolean;
   isAdmin: boolean;
+  gabbaiOf: number | null;
   zmanim: DayZmanim | null;
   activeFilter: FilterKey;
 }
@@ -34,7 +35,7 @@ function hasFilter(syn: Synagogue, filter: FilterKey): boolean {
   return true;
 }
 
-export function SynagoguesSection({ synagogues, onUpdate, loaded, isAdmin, zmanim, activeFilter }: Props) {
+export function SynagoguesSection({ synagogues, onUpdate, loaded, isAdmin, gabbaiOf, zmanim, activeFilter }: Props) {
   const [searchQ, setSearchQ]     = useState('');
   const [showSuggest, setShowSuggest] = useState(false);
   const [openId, setOpenId]       = useState<number | null>(null);
@@ -133,9 +134,10 @@ export function SynagoguesSection({ synagogues, onUpdate, loaded, isAdmin, zmani
                 key={syn.id}
                 synagogue={syn}
                 isAdmin={isAdmin}
+                gabbaiOf={gabbaiOf}
                 zmanim={zmanim}
                 onUpdate={onUpdate}
-                forceOpen={openId === syn.id}
+                forceOpen={openId === syn.id || gabbaiOf === syn.id}
               />
             ))}
           </div>

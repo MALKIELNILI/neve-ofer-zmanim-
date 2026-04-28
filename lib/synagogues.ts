@@ -14,10 +14,12 @@ export interface Synagogue {
   rabbiName: string; rabbiPhone: string; gabbaiName: string; gabbaiPhone: string;
   weekday: WeekdayPrayers; shabbat: ShabbatPrayers;
   shiurim: Shiur[]; timesConfirmed: boolean; timesUpdatedAt: string | null;
+  editPin?: string; // קוד גבאי — נראה רק למנהל ראשי
 }
 export interface UpdatePayload {
   weekday: WeekdayPrayers; shabbat: ShabbatPrayers; shiurim: Shiur[];
-  rabbiName: string; rabbiPhone: string; gabbaiName: string; gabbaiPhone: string; address: string;
+  rabbiName: string; rabbiPhone: string; gabbaiName: string; gabbaiPhone: string;
+  address: string; editPin?: string;
 }
 
 // helpers

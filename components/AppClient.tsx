@@ -18,8 +18,8 @@ import { ScrollToTop } from './ScrollToTop';
 
 export function AppClient() {
   const { synagogues, updateSynagogue, loaded } = useSynagogues();
-  const { isAdmin } = useAdmin();
-  const [zmanim, setZmanim]           = useState<DayZmanim | null>(null);
+  const { isAdmin, gabbaiOf } = useAdmin();
+  const [zmanim, setZmanim]             = useState<DayZmanim | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterKey>('');
 
   useEffect(() => {
@@ -43,10 +43,14 @@ export function AppClient() {
       <YahreitBanner isAdmin={isAdmin} />
       <SearchSection synagogues={synagogues} zmanim={zmanim} activeFilter={activeFilter} onFilterChange={(k) => setActiveFilter(k as FilterKey)} />
       <ZmanimSection />
-      <SynagoguesSection synagogues={synagogues} onUpdate={updateSynagogue} loaded={loaded} isAdmin={isAdmin} zmanim={zmanim} activeFilter={activeFilter} />
+      <SynagoguesSection
+        synagogues={synagogues} onUpdate={updateSynagogue} loaded={loaded}
+        isAdmin={isAdmin} gabbaiOf={gabbaiOf}
+        zmanim={zmanim} activeFilter={activeFilter}
+      />
       <HalachaSection />
       <AnnouncementsSection isAdmin={isAdmin} />
-      <AdminBar />
+      <AdminBar synagogues={synagogues} />
       <ScrollToTop />
     </>
   );

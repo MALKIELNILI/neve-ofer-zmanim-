@@ -54,12 +54,14 @@ function buildForm(syn: Synagogue): UpdatePayload {
 interface Props {
   synagogue: Synagogue;
   isAdmin: boolean;
+  gabbaiOf?: number | null;
   zmanim: DayZmanim | null;
   onUpdate: (id: number, payload: UpdatePayload) => void;
   forceOpen?: boolean;
 }
 
-export function SynagogueCard({ synagogue: syn, isAdmin, zmanim, onUpdate, forceOpen }: Props) {
+export function SynagogueCard({ synagogue: syn, isAdmin, gabbaiOf, zmanim, onUpdate, forceOpen }: Props) {
+  const canEdit = isAdmin || gabbaiOf === syn.id;
   const [open,    setOpen]    = useState(false);
   const [editing, setEditing] = useState(false);
   const [form,    setForm]    = useState<UpdatePayload>(buildForm(syn));
@@ -100,7 +102,7 @@ export function SynagogueCard({ synagogue: syn, isAdmin, zmanim, onUpdate, force
 
           {/* Contact */}
           {editing
-            ? <EditContact form={form} setForm={setForm} />
+            ? <EditContact form={form} setForm={setForm} showPin={isAdmin} />
             : <DisplayContact syn={syn} />}
 
           {/* Weekday */}
@@ -140,7 +142,7 @@ export function SynagogueCard({ synagogue: syn, isAdmin, zmanim, onUpdate, force
           )}
 
           {/* Admin actions */}
-          {isAdmin && (
+          {canEdit && (
             <div className="flex gap-2 pt-1">
               {editing ? (
                 <>
@@ -247,7 +249,7 @@ function ShiurDisplay({ shiurim }: { shiurim: Shiur[] }) {
 
 // ── Edit sub-components ────────────────────────────────────────────────────
 
-function EditContact({ form, setForm }: { form: UpdatePayload; setForm: React.Dispatch<React.SetStateAction<UpdatePayload>> }) {
+function EditContact({ form, setForm, showPin }: { form: UpdatePayload; setForm: React.Dispatch<React.SetStateAction<UpdatePayload>>; showPin?: boolean }) {
   return (
     <div className="space-y-2">
       <input type="text" value={form.address} placeholder="כתובת בית הכנסת"
@@ -275,6 +277,16 @@ function EditContact({ form, setForm }: { form: UpdatePayload; setForm: React.Di
           onChange={e => setForm(f => ({ ...f, gabbaiPhone: e.target.value }))}
           className="w-32 bg-navy-900/50 border-r border-gold-600/15 px-2 py-2 text-white text-sm outline-none" />
       </div>
+
+      {/* קוד גבאי — רק למנהל ראשי */}
+      {showPin && (
+        <div className="flex items-center border border-amber-600/30 rounded-lg overflow-hidden bg-navy-800">
+          <span className="bg-navy-900 text-amber-500 text-xs font-bold px-3 py-2.5 border-l border-amber-600/20 shrink-0 select-none">🔑 קוד גבאי</span>
+          <input type="text" value={form.editPin ?? ''} placeholder="קוד כניסה לגבאי (ריק = ללא גישה)"
+            onChange={e => setForm(f => ({ ...f, editPin: e.target.value }))}
+            className="flex-1 bg-transparent px-3 py-2 text-white text-sm outline-none min-w-0 tracking-widest" />
+        </div>
+      )}
     </div>
   );
 }

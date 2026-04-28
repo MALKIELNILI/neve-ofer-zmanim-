@@ -24,6 +24,7 @@ function fromDB(row: any): Synagogue {
     shiurim:      row.shiurim         ?? [],
     timesConfirmed:  Boolean(row.times_confirmed),
     timesUpdatedAt:  row.times_updated_at ? String(row.times_updated_at) : null,
+    editPin:         row.edit_pin ? String(row.edit_pin) : undefined,
   };
 }
 
@@ -131,6 +132,7 @@ export function useSynagogues() {
         shiurim:          p.shiurim,
         times_confirmed:  true,
         times_updated_at: now,
+        edit_pin:         p.editPin ?? null,
       }).eq('id', id);
     }
     setSynagogues(prev => {
