@@ -96,9 +96,11 @@ export function YahreitBanner({ isAdmin }: { isAdmin: boolean }) {
         <p className="text-slate-500 text-xs">
           שמו יוזכר בתפילה ובלוח השכונה — נשמח לתאם עמך
         </p>
-        <a href="tel:0509766686"
-          className="inline-flex items-center gap-2 bg-gold-500/15 border border-gold-500/35 text-gold-300 rounded-xl px-5 py-2.5 text-sm font-semibold hover:bg-gold-500/25 transition-colors">
-          📞 לפרטים ויצירת קשר
+        <a
+          href="https://wa.me/972509766686?text=%D7%A9%D7%9C%D7%95%D7%9D%20%D7%95%D7%91%D7%A8%D7%9B%D7%94%2C%0A%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%91%D7%A8%D7%A8%20%D7%90%D7%95%D7%93%D7%95%D7%AA%20%D7%94%D7%A0%D7%A6%D7%97%D7%AA%20%D7%96%D7%9B%D7%A8%D7%95%2F%D7%96%D7%9B%D7%A8%D7%94%20%D7%A9%D7%9C%20%D7%99%D7%A7%D7%99%D7%A8%20%D7%9E%D7%A9%D7%A4%D7%97%D7%AA%D7%99%20%D7%91%D7%9C%D7%95%D7%97%20%D7%94%D7%96%D7%99%D7%9B%D7%A8%D7%95%D7%A0%D7%95%D7%AA%20%D7%A9%D7%9C%20%D7%A9%D7%9B%D7%95%D7%A0%D7%AA%20%D7%A0%D7%95%D7%95%D7%94%20%D7%A2%D7%95%D7%A4%D7%A8.%0A%D7%AA%D7%95%D7%93%D7%94%20%D7%A8%D7%91%D7%94."
+          className="inline-flex items-center gap-2 bg-green-700/20 border border-green-500/35 text-green-300 rounded-xl px-5 py-2.5 text-sm font-semibold hover:bg-green-700/30 transition-colors"
+        >
+          💬 יצירת קשר בווטאפ
         </a>
       </div>
 

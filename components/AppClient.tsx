@@ -15,6 +15,7 @@ import { YahreitBanner } from './YahreitBanner';
 import { AdminBar } from './AdminBar';
 import { HalachaSection } from './HalachaSection';
 import { ScrollToTop } from './ScrollToTop';
+import { InstructionsButton } from './InstructionsModal';
 
 export function AppClient() {
   const { synagogues, updateSynagogue, loaded } = useSynagogues();
@@ -52,6 +53,7 @@ export function AppClient() {
       <AnnouncementsSection isAdmin={isAdmin} />
       <AdminBar synagogues={synagogues} />
       <ScrollToTop />
+      <InstructionsButton />
     </>
   );
 }

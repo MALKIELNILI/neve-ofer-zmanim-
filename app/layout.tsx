@@ -11,11 +11,17 @@ const suez       = Suez_One({ subsets: ['hebrew', 'latin'], weight: '400', varia
 const assistant  = Assistant({ subsets: ['hebrew', 'latin'], variable: '--font-assistant', display: 'swap' });
 const notoSerif  = Noto_Serif_Hebrew({ subsets: ['hebrew'], weight: ['400', '700', '900'], variable: '--font-noto-serif', display: 'swap' });
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, maximumScale: 1 };
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, maximumScale: 1, themeColor: '#0f172a' };
 
 export const metadata: Metadata = {
-  title: 'אלי בעזרי — הליכות עולם',
-  description: 'זמני תפילה ואירועים — שכונת נווה עופר',
+  title: 'נווה עופר — זמני תפילה',
+  description: 'זמני תפילה, שיעורי תורה והלכה יומית — שכונת נווה עופר תל אביב',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'נווה עופר' },
+  icons: {
+    apple: '/icons/apple-touch-icon.png',
+    icon: '/icons/icon-192.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
