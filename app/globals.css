@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-heebo: 'Heebo', sans-serif;
+}
+
+html {
+  direction: rtl;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #060D1A;
+  color: #f1f5f9;
+  font-family: var(--font-heebo), 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Gold shimmer for decorative borders */
+.gold-border {
+  border-image: linear-gradient(90deg, transparent, #C9A84C, transparent) 1;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0C1426;
+}
+::-webkit-scrollbar-thumb {
+  background: #8B6914;
+  border-radius: 3px;
+}
