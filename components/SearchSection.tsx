@@ -189,48 +189,53 @@ function SlotChip({ label, time, desc, highlight }: { label: string; time: strin
 }
 
 // prayerKey: מציג רק את התפילה הרלוונטית. undefined = הכל
-function SynDetail({ syn, onClose, prayerKey, matchTime }: {
-  syn: Synagogue; onClose: () => void; prayerKey?: string; matchTime?: string;
+function SynDetail({ syn, onClose, prayerKey, matchTime, zmanim }: {
+  syn: Synagogue; onClose: () => void; prayerKey?: string; matchTime?: string; zmanim?: DayZmanim | null;
 }) {
   const showAll = !prayerKey && !matchTime;
 
-  // בנה רשימת slots לפי קונטקסט
+  // ממיר slot לזמן תצוגה — כולל זמנים יחסיים (נץ, פלג)
+  const slotTime = (s: import('@/lib/synagogues').PrayerSlot) => resolveSlotTime(s, zmanim ?? null);
+  const hasSlot  = (s: import('@/lib/synagogues').PrayerSlot) => !!(s.time || s.isRelative);
+
   const relevantSlots: { label: string; time: string; desc?: string; highlight: boolean }[] = [];
 
+  const push = (slots: import('@/lib/synagogues').PrayerSlot[], label: string) =>
+    slots.filter(hasSlot).forEach(s => {
+      const t = slotTime(s);
+      if (t) relevantSlots.push({ label, time: t, desc: s.desc || undefined, highlight: matchTime === t });
+    });
+
   if (showAll || prayerKey === 'shacharit') {
-    syn.weekday.shacharit.filter(s => s.time).forEach(s =>
-      relevantSlots.push({ label: 'שחרית (חול)', time: s.time, desc: s.desc, highlight: matchTime === s.time }));
-    syn.shabbat.shacharit.filter(s => s.time).forEach(s =>
-      relevantSlots.push({ label: 'שחרית (שבת)', time: s.time, desc: s.desc, highlight: matchTime === s.time }));
+    push(syn.weekday.shacharit, 'שחרית (חול)');
+    push(syn.shabbat.shacharit,  'שחרית (שבת)');
   }
   if (showAll || prayerKey === 'mincha') {
-    syn.weekday.mincha.filter(s => s.time).forEach(s =>
-      relevantSlots.push({ label: 'מנחה (חול)', time: s.time, desc: s.desc, highlight: matchTime === s.time }));
-    syn.shabbat.mincha.filter(s => s.time).forEach(s =>
-      relevantSlots.push({ label: 'מנחה (שבת)', time: s.time, desc: s.desc, highlight: matchTime === s.time }));
+    push(syn.weekday.mincha, 'מנחה (חול)');
+    push(syn.shabbat.mincha, 'מנחה (שבת)');
   }
   if (showAll || prayerKey === 'maariv') {
-    syn.weekday.maariv.filter(s => s.time).forEach(s =>
-      relevantSlots.push({ label: 'ערבית (חול)', time: s.time, desc: s.desc, highlight: matchTime === s.time }));
-    syn.shabbat.maariv.filter(s => s.time).forEach(s =>
-      relevantSlots.push({ label: 'ערבית (שבת)', time: s.time, desc: s.desc, highlight: matchTime === s.time }));
+    push(syn.weekday.maariv, 'ערבית (חול)');
+    push(syn.shabbat.maariv, 'ערבית (שבת)');
   }
-  if (showAll || prayerKey === 'kabbalatShabbat') {
-    syn.shabbat.kabbalatShabbat.filter(s => s.time).forEach(s =>
-      relevantSlots.push({ label: 'קבלת שבת', time: s.time, desc: s.desc, highlight: matchTime === s.time }));
-  }
-  // חיפוש לפי שעה — הצג כל slot שמתאים
+  if (showAll || prayerKey === 'kabbalatShabbat') push(syn.shabbat.kabbalatShabbat, 'קבלת שבת');
+  if (showAll || prayerKey === 'minchaErevShabbat') push(syn.shabbat.minchaErevShabbat ?? [], 'מנחה ערב שבת');
+
   if (matchTime && !prayerKey) {
-    const allSlots = [
-      ...syn.weekday.shacharit.map(s => ({ label: 'שחרית (חול)', ...s })),
-      ...syn.weekday.mincha.map(s =>    ({ label: 'מנחה (חול)',  ...s })),
-      ...syn.weekday.maariv.map(s =>    ({ label: 'ערבית (חול)', ...s })),
-      ...syn.shabbat.kabbalatShabbat.map(s => ({ label: 'קבלת שבת', ...s })),
-      ...syn.shabbat.shacharit.map(s => ({ label: 'שחרית (שבת)', ...s })),
-      ...syn.shabbat.mincha.map(s =>    ({ label: 'מנחה (שבת)',  ...s })),
-      ...syn.shabbat.maariv.map(s =>    ({ label: 'ערבית (שבת)', ...s })),
-    ].filter(s => s.time === matchTime);
-    allSlots.forEach(s => relevantSlots.push({ label: s.label, time: s.time, desc: s.desc, highlight: true }));
+    const all = [
+      ...syn.weekday.shacharit.map(s => ({ s, label: 'שחרית (חול)' })),
+      ...syn.weekday.mincha.map(s =>    ({ s, label: 'מנחה (חול)'  })),
+      ...syn.weekday.maariv.map(s =>    ({ s, label: 'ערבית (חול)' })),
+      ...(syn.shabbat.minchaErevShabbat ?? []).map(s => ({ s, label: 'מנחה ערב שבת' })),
+      ...syn.shabbat.kabbalatShabbat.map(s => ({ s, label: 'קבלת שבת'    })),
+      ...syn.shabbat.shacharit.map(s => ({ s, label: 'שחרית (שבת)'       })),
+      ...syn.shabbat.mincha.map(s =>    ({ s, label: 'מנחה (שבת)'        })),
+      ...syn.shabbat.maariv.map(s =>    ({ s, label: 'ערבית (שבת)'       })),
+    ].filter(({ s }) => slotTime(s) === matchTime);
+    all.forEach(({ s, label }) => {
+      const t = slotTime(s);
+      if (t) relevantSlots.push({ label, time: t, desc: s.desc || undefined, highlight: true });
+    });
   }
 
   return (
@@ -431,7 +436,7 @@ export function SearchSection({ synagogues, zmanim: zmanimProp, activeFilter, on
                 <div key={i}>
                   <Row label={p.synagogue.name} sub={p.prayerName} desc={p.desc || undefined} time={p.time} mins={p.mins} confirmed={p.synagogue.timesConfirmed}
                     selected={selectedSynId === p.synagogue.id} onClick={() => setSelectedSynId(prev => prev === p.synagogue.id ? null : p.synagogue.id)} />
-                  {selectedSynId === p.synagogue.id && first && <SynDetail syn={p.synagogue} prayerKey={p.prayerKey} matchTime={p.time} onClose={() => setSelectedSynId(null)} />}
+                  {selectedSynId === p.synagogue.id && first && <SynDetail syn={p.synagogue} prayerKey={p.prayerKey} matchTime={p.time} zmanim={zmanim} onClose={() => setSelectedSynId(null)} />}
                 </div>
               ); }); })()}
             </>}
@@ -448,7 +453,7 @@ export function SearchSection({ synagogues, zmanim: zmanimProp, activeFilter, on
               <div key={i}>
                 <Row label={p.synagogue.name} desc={p.desc || undefined} time={p.time} mins={p.mins} confirmed={p.synagogue.timesConfirmed}
                   selected={selectedSynId === p.synagogue.id} onClick={() => setSelectedSynId(prev => prev === p.synagogue.id ? null : p.synagogue.id)} />
-                {selectedSynId === p.synagogue.id && first && <SynDetail syn={p.synagogue} prayerKey={p.prayerKey} onClose={() => setSelectedSynId(null)} />}
+                {selectedSynId === p.synagogue.id && first && <SynDetail syn={p.synagogue} prayerKey={p.prayerKey} zmanim={zmanim} onClose={() => setSelectedSynId(null)} />}
               </div>
             ); }); })()}
           </>}
@@ -461,7 +466,7 @@ export function SearchSection({ synagogues, zmanim: zmanimProp, activeFilter, on
                 <div key={i}>
                   <Row label={p.synagogue.name} sub={p.prayerName} desc={p.desc || undefined} time={p.time} mins={p.mins}
                     selected={selectedSynId === p.synagogue.id} onClick={() => setSelectedSynId(prev => prev === p.synagogue.id ? null : p.synagogue.id)} />
-                  {selectedSynId === p.synagogue.id && first && <SynDetail syn={p.synagogue} matchTime={results.query as string} onClose={() => setSelectedSynId(null)} />}
+                  {selectedSynId === p.synagogue.id && first && <SynDetail syn={p.synagogue} matchTime={results.query as string} zmanim={zmanim} onClose={() => setSelectedSynId(null)} />}
                 </div>
               ); }); })()}
           </>}
@@ -472,7 +477,7 @@ export function SearchSection({ synagogues, zmanim: zmanimProp, activeFilter, on
               <div key={i}>
                 <Row label={p.synagogue.name} sub={p.prayerName} desc={p.desc || undefined} time={p.time} mins={p.mins} confirmed={p.synagogue.timesConfirmed}
                   selected={selectedSynId === p.synagogue.id} onClick={() => setSelectedSynId(prev => prev === p.synagogue.id ? null : p.synagogue.id)} />
-                {selectedSynId === p.synagogue.id && first && <SynDetail syn={p.synagogue} prayerKey={p.prayerKey} matchTime={p.time} onClose={() => setSelectedSynId(null)} />}
+                {selectedSynId === p.synagogue.id && first && <SynDetail syn={p.synagogue} prayerKey={p.prayerKey} matchTime={p.time} zmanim={zmanim} onClose={() => setSelectedSynId(null)} />}
               </div>
             ); }); })()}
           </>}
@@ -555,7 +560,7 @@ export function SearchSection({ synagogues, zmanim: zmanimProp, activeFilter, on
 
               {/* פרטים מורחבים */}
               {selectedSynId === syn.id && (
-                <SynDetail syn={syn} onClose={() => setSelectedSynId(null)} />
+                <SynDetail syn={syn} zmanim={zmanim} onClose={() => setSelectedSynId(null)} />
               )}
             </div>
           ))}

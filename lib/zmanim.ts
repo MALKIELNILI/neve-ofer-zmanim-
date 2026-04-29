@@ -113,9 +113,8 @@ export const ZMANIM_ANCHORS: { key: ZmanimAnchorKey; label: string }[] = [
   { key: 'plagHaMincha',   label: 'פלג המנחה'    },
   { key: 'sunset',         label: 'שקיעה'         },
   { key: 'candleLighting', label: 'הדלקת נרות'    },
-  { key: 'tzait',          label: 'צאת הכוכבים'   },
-  { key: 'tzait',          label: 'צאת שבת'        },
-  { key: 'tzaitRT',        label: 'צאת שבת ר"ת'   },
+  { key: 'tzait',          label: 'צאת הכוכבים (18 דק)' },
+  { key: 'tzaitRT',        label: 'צאת שבת ר"ת (72 דק)'  },
   { key: 'chatzotLayla',   label: 'חצות הלילה'    },
 ];
 
