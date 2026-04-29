@@ -364,12 +364,23 @@ export function SearchSection({ synagogues, zmanim: zmanimProp, activeFilter, on
       return { type: 'prayer', label, matches, timeFiltered: upcoming.length > 0 };
     }
 
+    // חיפוש שיעורים — כל שדה
+    const shiurEntries: { synagogue: Synagogue; shiur: Shiur }[] = [];
+    for (const syn of synagogues) {
+      for (const sh of syn.shiurim) {
+        if ([sh.name, sh.desc, sh.schedule, sh.lecturer].some(f => f && f.includes(q))) {
+          shiurEntries.push({ synagogue: syn, shiur: sh });
+        }
+      }
+    }
+    if (shiurEntries.length > 0) return { type: 'shiurim-search', entries: shiurEntries };
+
+    // חיפוש בית כנסת — שם, רב, גבאי, כתובת, תיאורי זמנים
     const synMatches = synagogues.filter(s =>
       s.name.includes(q) ||
       (s.rabbiName && s.rabbiName.includes(q)) ||
       (s.gabbaiName && s.gabbaiName.includes(q)) ||
       (s.address && s.address.includes(q)) ||
-      s.shiurim.some(sh => sh.name.includes(q) || sh.desc.includes(q) || sh.schedule.includes(q)) ||
       [...s.weekday.shacharit, ...s.weekday.mincha, ...s.weekday.maariv,
        ...s.shabbat.shacharit, ...s.shabbat.mincha, ...s.shabbat.maariv, ...s.shabbat.kabbalatShabbat]
         .some((sl: PrayerSlot) => sl.desc && sl.desc.includes(q))
@@ -464,6 +475,24 @@ export function SearchSection({ synagogues, zmanim: zmanimProp, activeFilter, on
                 {selectedSynId === p.synagogue.id && first && <SynDetail syn={p.synagogue} prayerKey={p.prayerKey} matchTime={p.time} onClose={() => setSelectedSynId(null)} />}
               </div>
             ); }); })()}
+          </>}
+
+          {results.type === 'shiurim-search' && <>
+            <p className="text-gold-400 text-sm font-bold px-3 pt-3 pb-1">📚 שיעורים תואמים</p>
+            {(results.entries as { synagogue: Synagogue; shiur: Shiur }[]).map(({ synagogue: syn, shiur: sh }, i) => (
+              <div key={i} className="flex items-center justify-between px-3 py-2.5 border-t border-gold-600/10 first:border-0">
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-medium">{sh.name}</p>
+                  <p className="text-gold-500 text-xs">{syn.name}</p>
+                  {sh.lecturer && <p className="text-slate-400 text-xs">{sh.lecturer}</p>}
+                  {sh.desc && <p className="text-slate-500 text-xs">{sh.desc}</p>}
+                </div>
+                <div className="text-center shrink-0 mr-2 bg-navy-800/80 rounded-lg px-3 py-1.5 border border-navy-600/40">
+                  {sh.time && <p className="text-white font-bold text-sm tabular-nums">{sh.time}</p>}
+                  <p className="text-slate-400 text-xs">{sh.schedule}</p>
+                </div>
+              </div>
+            ))}
           </>}
 
           {results.type === 'shiurim' && (() => {
