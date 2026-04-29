@@ -143,7 +143,8 @@ export function useSynagogues() {
   const updateSynagogue = useCallback(async (id: number, p: UpdatePayload) => {
     const now = new Date().toISOString();
     if (supabase) {
-      await supabase.from('synagogues').update({
+      // עדכון ראשי — ללא edit_pin (שדה שאולי לא קיים עדיין)
+      const { error } = await supabase.from('synagogues').update({
         address:          p.address,
         rabbi_name:       p.rabbiName,
         rabbi_phone:      p.rabbiPhone,
@@ -154,8 +155,18 @@ export function useSynagogues() {
         shiurim:          p.shiurim,
         times_confirmed:  true,
         times_updated_at: now,
-        edit_pin:         p.editPin ?? null,
       }).eq('id', id);
+
+      if (error) {
+        console.error('שגיאת שמירה ב-Supabase:', error.message);
+        alert('שגיאה בשמירה — פרטים בקונסול');
+        return;
+      }
+
+      // עדכון edit_pin בנפרד — אם העמודה קיימת
+      if (p.editPin !== undefined) {
+        await supabase.from('synagogues').update({ edit_pin: p.editPin }).eq('id', id);
+      }
     }
     setSynagogues(prev => {
       const next = prev.map(s => s.id === id ? { ...s, ...p, timesConfirmed: true, timesUpdatedAt: now } : s);
