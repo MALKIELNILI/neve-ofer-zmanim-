@@ -23,7 +23,8 @@ function fromDB(row: any): Synagogue {
     shiurim:      row.shiurim         || [],
     timesConfirmed:  Boolean(row.times_confirmed),
     timesUpdatedAt:  row.times_updated_at ? String(row.times_updated_at) : null,
-    editPin:         row.edit_pin ? String(row.edit_pin) : undefined,
+    editPin:         row.edit_pin  ? String(row.edit_pin)  : undefined,
+    imageUrl:        row.image_url ? String(row.image_url) : undefined,
   };
 }
 

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Synagogue, PrayerSlot, WeekdayPrayers, ShabbatPrayers, Shiur, UpdatePayload } from '@/lib/synagogues';
+import { supabase } from '@/lib/supabase';
 import { ZMANIM_ANCHORS, resolveSlotTime, formatTime, calcRelativeDate, calculateDayZmanim, type DayZmanim, type ZmanimAnchorKey } from '@/lib/zmanim';
 
 // ── constants ──────────────────────────────────────────────────────────────
@@ -95,7 +96,23 @@ interface Props {
 }
 
 export function SynagogueCard({ synagogue: syn, isAdmin, gabbaiOf, zmanim, onUpdate, onRemove, forceOpen }: Props) {
-  const canEdit = isAdmin || gabbaiOf === syn.id;
+  const canEdit   = isAdmin || gabbaiOf === syn.id;
+  const fileRef   = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const uploadImage = async (file: File) => {
+    if (!supabase || !canEdit) return;
+    setUploading(true);
+    const ext  = file.name.split('.').pop() ?? 'jpg';
+    const path = `syn-${syn.id}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('synagogue-images').upload(path, file, { upsert: true });
+    if (!error) {
+      const { data } = supabase.storage.from('synagogue-images').getPublicUrl(path);
+      await supabase.from('synagogues').update({ image_url: data.publicUrl }).eq('id', syn.id);
+      onUpdate(syn.id, { ...form, imageUrl: data.publicUrl });
+    } else { alert('שגיאה בהעלאה: ' + error.message); }
+    setUploading(false);
+  };
   const [open,    setOpen]    = useState(false);
   const [editing, setEditing] = useState(false);
   const [form,    setForm]    = useState<UpdatePayload>(buildForm(syn));
@@ -121,7 +138,10 @@ export function SynagogueCard({ synagogue: syn, isAdmin, gabbaiOf, zmanim, onUpd
       <button onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-navy-600/40 transition-colors">
         <div className="flex items-center gap-3">
-          <span className="text-xl">🕍</span>
+          {syn.imageUrl
+            ? <img src={syn.imageUrl} alt={syn.name} className="w-10 h-10 rounded-lg object-cover border border-gold-600/30" />
+            : <span className="text-xl">🕍</span>
+          }
           <div className="text-right">
             <p className="text-white font-semibold">{syn.name}</p>
             {syn.address && <p className="text-slate-500 text-xs">{syn.address}</p>}
@@ -138,6 +158,30 @@ export function SynagogueCard({ synagogue: syn, isAdmin, gabbaiOf, zmanim, onUpd
       {/* ── Expanded body ── */}
       {open && (
         <div className="border-t border-gold-600/10 px-4 pb-4 pt-3 space-y-4">
+
+          {/* העלאת תמונה */}
+          {editing && canEdit && (
+            <div className="flex items-center gap-3 mb-2">
+              {syn.imageUrl && (
+                <img src={syn.imageUrl} alt="" className="w-12 h-12 rounded-lg object-cover border border-gold-600/30 shrink-0" />
+              )}
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="flex-1 text-xs border border-gold-600/30 hover:border-gold-400/60 text-gold-400 rounded-xl py-2 transition-colors disabled:opacity-50"
+              >
+                {uploading ? '⏳ מעלה...' : syn.imageUrl ? '🖼️ החלף תמונה' : '📷 הוסף תמונה לבית הכנסת'}
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = ''; }}
+              />
+            </div>
+          )}
 
           {/* שם בית הכנסת — עריכה למנהל */}
           {editing && isAdmin && (
