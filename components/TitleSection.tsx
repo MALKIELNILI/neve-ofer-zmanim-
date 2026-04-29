@@ -10,7 +10,9 @@ const ALIGNS: { val: TitleStyle['align']; label: string; icon: string }[] = [
   { val: 'left',   label: 'שמאל', icon: '⇥' },
 ];
 
-export function TitleSection() {
+interface TitleProps { isAdmin?: boolean; }
+
+export function TitleSection({ isAdmin }: TitleProps) {
   const { style, update } = useTitleStyle();
   const [showPicker, setShowPicker] = useState(false);
   const fontFamily = FONT_VARS[style.font];
@@ -31,12 +33,14 @@ export function TitleSection() {
         aria-hidden="true"
       />
 
-      {/* Settings button */}
-      <button onClick={() => setShowPicker(s => !s)}
-        className="absolute top-3 left-3 text-slate-600 hover:text-slate-400 text-lg bg-navy-900/60 rounded-lg p-1.5 transition-colors"
-        title="שינוי פונט ויישור">
-        ⚙️
-      </button>
+      {/* Settings button — רק למנהל ראשי */}
+      {isAdmin && (
+        <button onClick={() => setShowPicker(s => !s)}
+          className="absolute top-3 left-3 text-slate-500 hover:text-slate-300 text-lg bg-navy-900/60 rounded-lg p-1.5 transition-colors"
+          title="שינוי פונט ויישור">
+          ⚙️
+        </button>
+      )}
 
       {/* Title */}
       <div className={`relative z-10 -mt-4 pb-2 px-6 ${alignClass}`}>

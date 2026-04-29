@@ -39,7 +39,7 @@ export function AppClient() {
 
   return (
     <>
-      <TitleSection />
+      <TitleSection isAdmin={isAdmin} />
       <DateHeader />
       <YahreitBanner isAdmin={isAdmin} />
       <SearchSection synagogues={synagogues} zmanim={zmanim} activeFilter={activeFilter} onFilterChange={(k) => setActiveFilter(k as FilterKey)} />
