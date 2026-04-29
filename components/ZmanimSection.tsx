@@ -79,7 +79,14 @@ export function ZmanimSection() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-gold-400 font-bold text-lg">⏰ זמני היום</h2>
-              <p className="text-slate-500 text-xs">לוח אור החיים · נווה עופר</p>
+              <a
+                href="https://maor.orhachaim.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-500 text-xs hover:text-gold-400 transition-colors"
+              >
+                לוח אור החיים · נווה עופר ↗
+              </a>
             </div>
             {isToday && pastCount > 0 && (
               <button onClick={() => setShowAll(s => !s)}
