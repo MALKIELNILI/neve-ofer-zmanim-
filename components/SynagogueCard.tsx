@@ -235,18 +235,26 @@ function PrayerDisplay({ prayers, data, zmanim }: {
   data: WeekdayPrayers | ShabbatPrayers;
   zmanim: DayZmanim | null;
 }) {
+  const rows = prayers.map(({ key, label, icon, color }) => {
+    const slots = ((data as unknown as Record<string, PrayerSlot[]>)[key] ?? []).filter(s => s.time || s.isRelative);
+    return { key, label, icon, color, slots };
+  }).filter(r => r.slots.length > 0);
+
+  if (!rows.length) return null;
+
   return (
-    <div className="space-y-2">
-      {prayers.map(({ key, label, icon, color }) => {
-        const slots = ((data as unknown as Record<string, PrayerSlot[]>)[key] ?? []).filter(s => s.time || s.isRelative);
-        if (!slots.length) return null;
+    <div className="rounded-xl overflow-hidden border border-navy-600/30">
+      {rows.map(({ key, label, icon, color, slots }, ri) => {
         const multi = slots.length > 1;
         return (
-          <div key={key} className="flex items-start gap-2">
-            <span className={`text-xs pt-1 shrink-0 w-24 font-medium ${color}`}>
+          <div key={key} className={`flex items-center justify-between px-3 py-2.5 ${ri > 0 ? 'border-t border-navy-600/30' : ''}`}>
+            {/* תווית התפילה */}
+            <span className={`text-xs font-semibold shrink-0 w-28 ${color}`}>
               {icon} {label}
             </span>
-            <div className="flex flex-wrap gap-1.5">
+
+            {/* שעות — ממורכזות */}
+            <div className="flex flex-wrap justify-center gap-2 flex-1">
               {slots.map((s, i) => {
                 const displayTime = resolveSlotTime(s, zmanim);
                 const anchor = s.isRelative ? ZMANIM_ANCHORS.find(a => a.key === s.anchor) : null;
@@ -254,11 +262,13 @@ function PrayerDisplay({ prayers, data, zmanim }: {
                   ? `${s.offsetMin ? `${s.offsetMin} דק' ${s.offsetDir === 'before' ? 'לפני' : 'אחרי'}` : 'בדיוק'} ${anchor.label}`
                   : undefined;
                 return (
-                  <div key={i} className="flex items-center gap-1 bg-navy-800/70 rounded-lg px-2.5 py-1 border border-navy-600/40" title={tooltip}>
-                    {multi && <span className="text-slate-600 text-[10px] font-bold">{MINYAN_LETTERS[i] ?? i + 1}&#8217;</span>}
-                    <span className="text-white font-bold text-sm tabular-nums">{displayTime || '--:--'}</span>
-                    {s.isRelative && <span className="text-slate-600 text-xs">⚡</span>}
-                    <Badge text={s.desc} />
+                  <div key={i} className="flex flex-col items-center gap-0.5 bg-navy-800/80 rounded-lg px-3 py-1.5 min-w-[56px] border border-navy-600/40" title={tooltip}>
+                    {multi && <span className="text-slate-500 text-[10px]">מניין {MINYAN_LETTERS[i] ?? i + 1}׳</span>}
+                    <span className="text-white font-bold text-base tabular-nums leading-tight">
+                      {displayTime || '--:--'}
+                      {s.isRelative && <span className="text-slate-500 text-[10px] mr-0.5">⚡</span>}
+                    </span>
+                    {s.desc && <span className="text-gold-500 text-[10px] leading-tight text-center">{s.desc}</span>}
                   </div>
                 );
               })}
@@ -272,17 +282,17 @@ function PrayerDisplay({ prayers, data, zmanim }: {
 
 function ShiurDisplay({ shiurim }: { shiurim: Shiur[] }) {
   return (
-    <div className="space-y-1.5">
-      {shiurim.map(sh => (
-        <div key={sh.id} className="bg-navy-800/60 rounded-lg px-3 py-2 flex items-start justify-between">
-          <div>
+    <div className="rounded-xl overflow-hidden border border-navy-600/30">
+      {shiurim.map((sh, i) => (
+        <div key={sh.id} className={`flex items-center justify-between px-3 py-2.5 ${i > 0 ? 'border-t border-navy-600/30' : ''}`}>
+          <div className="flex-1 min-w-0">
             <p className="text-white text-sm font-medium">{sh.name}</p>
-            {sh.lecturer && <p className="text-gold-500 text-xs">{fmtLecturer(sh.lecturer)}</p>}
+            {sh.lecturer && <p className="text-gold-500 text-xs truncate">{fmtLecturer(sh.lecturer)}</p>}
             {sh.desc && <p className="text-slate-500 text-xs">{sh.desc}</p>}
           </div>
-          <div className="text-left">
-            <p className="text-white font-bold text-sm">{sh.time}</p>
-            <p className="text-slate-400 text-xs">{sh.schedule}</p>
+          <div className="text-center shrink-0 mr-2 bg-navy-800/80 rounded-lg px-3 py-1.5 min-w-[60px] border border-navy-600/40">
+            <p className="text-white font-bold text-base tabular-nums">{sh.time}</p>
+            <p className="text-slate-400 text-[10px]">{sh.schedule}</p>
           </div>
         </div>
       ))}
