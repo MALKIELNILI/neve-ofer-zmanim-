@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import type { Synagogue, UpdatePayload } from '@/lib/synagogues';
 import type { DayZmanim } from '@/lib/zmanim';
 import { SynagogueCard } from './SynagogueCard';
@@ -9,6 +9,8 @@ import { type FilterKey } from './PrayerFilter';
 interface Props {
   synagogues: Synagogue[];
   onUpdate: (id: number, payload: UpdatePayload) => void;
+  onAdd: (name: string) => void;
+  onRemove: (id: number) => void;
   loaded: boolean;
   isAdmin: boolean;
   gabbaiOf: number | null;
@@ -35,11 +37,21 @@ function hasFilter(syn: Synagogue, filter: FilterKey): boolean {
   return true;
 }
 
-export function SynagoguesSection({ synagogues, onUpdate, loaded, isAdmin, gabbaiOf, zmanim, activeFilter }: Props) {
-  const [searchQ, setSearchQ]     = useState('');
+export function SynagoguesSection({ synagogues, onUpdate, onAdd, onRemove, loaded, isAdmin, gabbaiOf, zmanim, activeFilter }: Props) {
+  const [searchQ, setSearchQ]       = useState('');
   const [showSuggest, setShowSuggest] = useState(false);
-  const [openId, setOpenId]       = useState<number | null>(null);
+  const [openId, setOpenId]         = useState<number | null>(null);
+  const [newName, setNewName]       = useState('');
+  const [showAdd, setShowAdd]       = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleAdd = useCallback(() => {
+    const n = newName.trim();
+    if (!n) return;
+    onAdd(n);
+    setNewName('');
+    setShowAdd(false);
+  }, [newName, onAdd]);
 
   const confirmed = synagogues.filter(s => s.timesConfirmed).length;
 
@@ -70,10 +82,33 @@ export function SynagoguesSection({ synagogues, onUpdate, loaded, isAdmin, gabba
     <section className="mb-6">
       <div className="flex items-center justify-between mb-3 mx-4">
         <h2 className="text-gold-400 font-bold text-lg">🕍 בתי כנסת בשכונה</h2>
-        <span className="text-xs text-slate-500 bg-navy-700 border border-gold-600/10 px-2.5 py-1 rounded-full">
-          {confirmed}/{synagogues.length} מעודכנים
-        </span>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <button onClick={() => setShowAdd(s => !s)}
+              className="text-xs text-emerald-400 border border-emerald-600/40 rounded-full px-2.5 py-1 hover:bg-emerald-900/20 transition-colors">
+              + הוסף
+            </button>
+          )}
+          <span className="text-xs text-slate-500 bg-navy-700 border border-gold-600/10 px-2.5 py-1 rounded-full">
+            {confirmed}/{synagogues.length} מעודכנים
+          </span>
+        </div>
       </div>
+
+      {/* טופס הוספה */}
+      {isAdmin && showAdd && (
+        <div className="mx-4 mb-3 flex gap-2">
+          <input
+            type="text" value={newName} dir="rtl" autoFocus
+            onChange={e => setNewName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAdd()}
+            placeholder="שם בית הכנסת החדש..."
+            className="flex-1 bg-navy-700 border border-emerald-600/40 focus:border-emerald-400 rounded-xl px-3 py-2 text-white text-sm outline-none"
+          />
+          <button onClick={handleAdd} className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-4 py-2 text-sm font-bold">הוסף</button>
+          <button onClick={() => { setShowAdd(false); setNewName(''); }} className="text-slate-400 hover:text-white px-2">✕</button>
+        </div>
+      )}
 
       {/* שורת חיפוש */}
       <div className="mx-4 mb-3 relative">
@@ -137,6 +172,7 @@ export function SynagoguesSection({ synagogues, onUpdate, loaded, isAdmin, gabba
                 gabbaiOf={gabbaiOf}
                 zmanim={zmanim}
                 onUpdate={onUpdate}
+                onRemove={isAdmin ? onRemove : undefined}
                 forceOpen={openId === syn.id || gabbaiOf === syn.id}
               />
             ))}

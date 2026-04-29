@@ -18,7 +18,7 @@ import { ScrollToTop } from './ScrollToTop';
 import { InstructionsButton } from './InstructionsModal';
 
 export function AppClient() {
-  const { synagogues, updateSynagogue, loaded } = useSynagogues();
+  const { synagogues, updateSynagogue, addSynagogue, removeSynagogue, loaded } = useSynagogues();
   const { isAdmin, gabbaiOf } = useAdmin();
   const [zmanim, setZmanim]             = useState<DayZmanim | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterKey>('');
@@ -45,8 +45,9 @@ export function AppClient() {
       <SearchSection synagogues={synagogues} zmanim={zmanim} activeFilter={activeFilter} onFilterChange={(k) => setActiveFilter(k as FilterKey)} />
       <ZmanimSection />
       <SynagoguesSection
-        synagogues={synagogues} onUpdate={updateSynagogue} loaded={loaded}
-        isAdmin={isAdmin} gabbaiOf={gabbaiOf}
+        synagogues={synagogues} onUpdate={updateSynagogue}
+        onAdd={addSynagogue} onRemove={removeSynagogue}
+        loaded={loaded} isAdmin={isAdmin} gabbaiOf={gabbaiOf}
         zmanim={zmanim} activeFilter={activeFilter}
       />
       <HalachaSection />

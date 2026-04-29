@@ -140,11 +140,21 @@ export function useSynagogues() {
     }
   }, []);
 
+  const save = (next: Synagogue[]) => {
+    if (!supabase) {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(next));
+        localStorage.setItem(LS_VERSION, String(DATA_VERSION));
+      } catch { /* ignore */ }
+    }
+    setSynagogues(next);
+  };
+
   const updateSynagogue = useCallback(async (id: number, p: UpdatePayload) => {
     const now = new Date().toISOString();
     if (supabase) {
-      // עדכון ראשי — ללא edit_pin (שדה שאולי לא קיים עדיין)
       const { error } = await supabase.from('synagogues').update({
+        name:             p.name,
         address:          p.address,
         rabbi_name:       p.rabbiName,
         rabbi_phone:      p.rabbiPhone,
@@ -158,27 +168,34 @@ export function useSynagogues() {
       }).eq('id', id);
 
       if (error) {
-        console.error('שגיאת שמירה ב-Supabase:', error.message);
-        alert('שגיאה בשמירה — פרטים בקונסול');
+        console.error('שגיאת שמירה:', error.message);
+        alert('שגיאה בשמירה — נסה שוב');
         return;
       }
-
-      // עדכון edit_pin בנפרד — אם העמודה קיימת
       if (p.editPin !== undefined) {
         await supabase.from('synagogues').update({ edit_pin: p.editPin }).eq('id', id);
       }
     }
-    setSynagogues(prev => {
-      const next = prev.map(s => s.id === id ? { ...s, ...p, timesConfirmed: true, timesUpdatedAt: now } : s);
-      if (!supabase) {
-        try {
-          localStorage.setItem(LS_KEY, JSON.stringify(next));
-          localStorage.setItem(LS_VERSION, String(DATA_VERSION));
-        } catch { /* ignore */ }
-      }
-      return next;
-    });
-  }, []);
+    save(synagogues.map(s => s.id === id ? { ...s, ...p, name: p.name ?? s.name, timesConfirmed: true, timesUpdatedAt: now } : s));
+  }, [synagogues]);
 
-  return { synagogues, updateSynagogue, loaded };
+  const addSynagogue = useCallback(async (name: string) => {
+    const newId = Math.max(0, ...synagogues.map(s => s.id)) + 1;
+    const newSyn: Synagogue = { ...SYNAGOGUES_INITIAL[0], id: newId, name, timesConfirmed: false, timesUpdatedAt: null };
+    if (supabase) {
+      const { error } = await supabase.from('synagogues').insert(toDB(newSyn));
+      if (error) { alert('שגיאה בהוספה — ' + error.message); return; }
+    }
+    save([...synagogues, newSyn].sort((a, b) => a.id - b.id));
+  }, [synagogues]);
+
+  const removeSynagogue = useCallback(async (id: number) => {
+    if (supabase) {
+      const { error } = await supabase.from('synagogues').delete().eq('id', id);
+      if (error) { alert('שגיאה במחיקה — ' + error.message); return; }
+    }
+    save(synagogues.filter(s => s.id !== id));
+  }, [synagogues]);
+
+  return { synagogues, updateSynagogue, addSynagogue, removeSynagogue, loaded };
 }

@@ -17,6 +17,7 @@ export interface Synagogue {
   editPin?: string; // קוד גבאי — נראה רק למנהל ראשי
 }
 export interface UpdatePayload {
+  name?: string;
   weekday: WeekdayPrayers; shabbat: ShabbatPrayers; shiurim: Shiur[];
   rabbiName: string; rabbiPhone: string; gabbaiName: string; gabbaiPhone: string;
   address: string; editPin?: string;

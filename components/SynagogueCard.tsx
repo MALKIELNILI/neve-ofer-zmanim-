@@ -83,10 +83,11 @@ interface Props {
   gabbaiOf?: number | null;
   zmanim: DayZmanim | null;
   onUpdate: (id: number, payload: UpdatePayload) => void;
+  onRemove?: (id: number) => void;
   forceOpen?: boolean;
 }
 
-export function SynagogueCard({ synagogue: syn, isAdmin, gabbaiOf, zmanim, onUpdate, forceOpen }: Props) {
+export function SynagogueCard({ synagogue: syn, isAdmin, gabbaiOf, zmanim, onUpdate, onRemove, forceOpen }: Props) {
   const canEdit = isAdmin || gabbaiOf === syn.id;
   const [open,    setOpen]    = useState(false);
   const [editing, setEditing] = useState(false);
@@ -94,8 +95,13 @@ export function SynagogueCard({ synagogue: syn, isAdmin, gabbaiOf, zmanim, onUpd
 
   useEffect(() => { if (forceOpen) setOpen(true); }, [forceOpen]);
 
-  const reset = () => { setForm(buildForm(syn)); setEditing(false); };
-  const save  = () => { onUpdate(syn.id, form); setEditing(false); };
+  const reset    = () => { setForm(buildForm(syn)); setEditing(false); };
+  const save     = () => { onUpdate(syn.id, form); setEditing(false); };
+  const handleRemove = () => {
+    if (window.confirm(`למחוק את "${syn.name}"? פעולה זו אינה הפיכה.`)) {
+      onRemove?.(syn.id);
+    }
+  };
 
   const updStr = syn.timesUpdatedAt
     ? new Date(syn.timesUpdatedAt).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' })
@@ -125,6 +131,16 @@ export function SynagogueCard({ synagogue: syn, isAdmin, gabbaiOf, zmanim, onUpd
       {/* ── Expanded body ── */}
       {open && (
         <div className="border-t border-gold-600/10 px-4 pb-4 pt-3 space-y-4">
+
+          {/* שם בית הכנסת — עריכה למנהל */}
+          {editing && isAdmin && (
+            <input
+              type="text" value={form.name ?? syn.name} dir="rtl"
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              placeholder="שם בית הכנסת"
+              className="w-full bg-navy-800 border border-gold-600/30 rounded-xl px-3 py-2 text-gold-200 font-bold text-base outline-none focus:border-gold-400 mb-2"
+            />
+          )}
 
           {/* Contact */}
           {editing
@@ -172,8 +188,9 @@ export function SynagogueCard({ synagogue: syn, isAdmin, gabbaiOf, zmanim, onUpd
             <div className="flex gap-2 pt-1">
               {editing ? (
                 <>
-                  <button onClick={save}  className="flex-1 bg-gold-500 hover:bg-gold-400 text-navy-900 font-bold rounded-xl py-2.5 text-sm">✓ שמור ואשר</button>
+                  <button onClick={save}  className="flex-1 bg-gold-500 hover:bg-gold-400 text-navy-900 font-bold rounded-xl py-2.5 text-sm">✓ שמור</button>
                   <button onClick={reset} className="px-4 bg-navy-600 text-slate-300 rounded-xl py-2.5 text-sm">ביטול</button>
+                  {onRemove && <button onClick={handleRemove} className="px-3 bg-red-900/60 hover:bg-red-800 text-red-300 rounded-xl py-2.5 text-sm">🗑</button>}
                 </>
               ) : (
                 <button onClick={() => setEditing(true)}
