@@ -58,6 +58,13 @@ const Badge = ({ text }: { text: string }) =>
 
 const EMPTY_SLOT = [{ time: '', desc: '' }];
 
+function withShlitta(name: string): string {
+  if (!name.trim()) return name;
+  const n = name.trim();
+  if (n.includes('שליט') || n.includes('זצ') || n.includes('זכ')) return n;
+  return n + ' שליט"א';
+}
+
 function buildForm(syn: Synagogue): UpdatePayload {
   const sh = syn.shabbat;
   return {
@@ -70,8 +77,8 @@ function buildForm(syn: Synagogue): UpdatePayload {
       maariv:            sh.maariv            ?? EMPTY_SLOT,
     })),
     shiurim:    JSON.parse(JSON.stringify(syn.shiurim)),
-    rabbiName:  syn.rabbiName,  rabbiPhone:  syn.rabbiPhone,
-    gabbaiName: syn.gabbaiName, gabbaiPhone: syn.gabbaiPhone,
+    rabbiName:  withShlitta(syn.rabbiName),  rabbiPhone:  syn.rabbiPhone,
+    gabbaiName: syn.gabbaiName,              gabbaiPhone: syn.gabbaiPhone,
     address:    syn.address,
   };
 }
@@ -312,7 +319,7 @@ function EditContact({ form, setForm, showPin }: { form: UpdatePayload; setForm:
       {/* Rabbi row */}
       <div className="flex items-center border border-gold-600/25 rounded-lg overflow-hidden bg-navy-800">
         <span className="bg-navy-900 text-gold-500 text-xs font-bold px-3 py-2.5 border-l border-gold-600/20 shrink-0 select-none">הרב</span>
-        <input type="text" value={form.rabbiName} placeholder="שם הרב"
+        <input type="text" value={form.rabbiName} placeholder='שם הרב שליט"א'
           onChange={e => setForm(f => ({ ...f, rabbiName: e.target.value }))}
           className="flex-1 bg-transparent px-3 py-2 text-white text-sm outline-none min-w-0" />
         <input type="tel" value={form.rabbiPhone} placeholder="טלפון" dir="ltr"
@@ -405,7 +412,7 @@ function SlotEditor({ label, icon = '', color = 'text-slate-400', slots, onChang
                   <select value={slot.anchor ?? 'sunrise'}
                     onChange={e => update(i, { anchor: e.target.value })}
                     className="flex-1 bg-navy-900 border border-gold-600/20 rounded-lg px-2 py-1.5 text-white text-sm min-w-0">
-                    {ZMANIM_ANCHORS.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
+                    {ZMANIM_ANCHORS.map(a => <option key={a.label} value={a.key}>{a.label}</option>)}
                   </select>
 
                   <select value={slot.offsetDir ?? 'exact'}
@@ -485,7 +492,8 @@ function ShiurEditor({ shiurim, onChange }: { shiurim: Shiur[]; onChange: (s: Sh
             <button onClick={() => remove(sh.id)} className="text-slate-600 hover:text-red-400 px-2 text-lg">×</button>
           </div>
           <input value={sh.lecturer ?? ''} onChange={e => upd(sh.id, 'lecturer', e.target.value)}
-            placeholder="מי מעביר את השיעור"
+            onBlur={e => { const v = e.target.value.trim(); if (v) upd(sh.id, 'lecturer', withShlitta(v)); }}
+            placeholder='שם הרב שליט"א'
             className="w-full bg-navy-900 border border-gold-600/15 rounded-lg px-2.5 py-1.5 text-white text-sm" />
           <div className="flex gap-2">
             <input value={sh.schedule} onChange={e => upd(sh.id, 'schedule', e.target.value)}

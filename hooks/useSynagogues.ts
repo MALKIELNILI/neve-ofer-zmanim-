@@ -66,14 +66,15 @@ export function useSynagogues() {
           const initialMap = new Map(SYNAGOGUES_INITIAL.map(s => [s.id, s]));
           const toUpsert: Synagogue[] = [];
 
-          const hasData = (syn: Synagogue) =>
+          // אין לדרוס נתוני Supabase — רק להשלים שורות ריקות לחלוטין
+          const hasRealData = (syn: Synagogue) =>
             [...syn.weekday.shacharit, ...syn.weekday.mincha, ...syn.weekday.maariv]
               .some(s => s.time || s.isRelative);
 
           const merged = data.map((row: Record<string, unknown>) => {
             const dbSyn = fromDB(row);
-            // החלף מ-SYNAGOGUES_INITIAL רק אם הנתונים ב-Supabase ריקים לחלוטין
-            if (!hasData(dbSyn)) {
+            // החלף מ-INITIAL רק אם לא מאושר ואין זמנים בכלל
+            if (!dbSyn.timesConfirmed && !hasRealData(dbSyn)) {
               const init = initialMap.get(dbSyn.id);
               if (init) {
                 const synToUse = { ...init, editPin: dbSyn.editPin };
@@ -81,7 +82,7 @@ export function useSynagogues() {
                 return synToUse;
               }
             }
-            return dbSyn;
+            return dbSyn; // שמור על כל מה שנכתב ידנית
           });
 
           // הוסף בתי כנסת חדשים שחסרים
@@ -140,15 +141,19 @@ export function useSynagogues() {
     }
   }, []);
 
-  const save = (next: Synagogue[]) => {
-    if (!supabase) {
-      try {
-        localStorage.setItem(LS_KEY, JSON.stringify(next));
-        localStorage.setItem(LS_VERSION, String(DATA_VERSION));
-      } catch { /* ignore */ }
-    }
-    setSynagogues(next);
-  };
+  // שמירה מקומית — תמיד דרך functional update
+  const saveLocal = useCallback((updater: (prev: Synagogue[]) => Synagogue[]) => {
+    setSynagogues(prev => {
+      const next = updater(prev);
+      if (!supabase) {
+        try {
+          localStorage.setItem(LS_KEY, JSON.stringify(next));
+          localStorage.setItem(LS_VERSION, String(DATA_VERSION));
+        } catch { /* ignore */ }
+      }
+      return next;
+    });
+  }, []);
 
   const updateSynagogue = useCallback(async (id: number, p: UpdatePayload) => {
     const now = new Date().toISOString();
@@ -176,26 +181,34 @@ export function useSynagogues() {
         await supabase.from('synagogues').update({ edit_pin: p.editPin }).eq('id', id);
       }
     }
-    save(synagogues.map(s => s.id === id ? { ...s, ...p, name: p.name ?? s.name, timesConfirmed: true, timesUpdatedAt: now } : s));
-  }, [synagogues]);
+    saveLocal(prev => prev.map(s =>
+      s.id === id ? { ...s, ...p, name: p.name ?? s.name, timesConfirmed: true, timesUpdatedAt: now } : s
+    ));
+  }, [saveLocal]);
 
   const addSynagogue = useCallback(async (name: string) => {
-    const newId = Math.max(0, ...synagogues.map(s => s.id)) + 1;
-    const newSyn: Synagogue = { ...SYNAGOGUES_INITIAL[0], id: newId, name, timesConfirmed: false, timesUpdatedAt: null };
-    if (supabase) {
-      const { error } = await supabase.from('synagogues').insert(toDB(newSyn));
-      if (error) { alert('שגיאה בהוספה — ' + error.message); return; }
-    }
-    save([...synagogues, newSyn].sort((a, b) => a.id - b.id));
-  }, [synagogues]);
+    setSynagogues(prev => {
+      const newId = Math.max(0, ...prev.map(s => s.id)) + 1;
+      const newSyn: Synagogue = { ...SYNAGOGUES_INITIAL[0], id: newId, name, timesConfirmed: false, timesUpdatedAt: null };
+      if (supabase) {
+        supabase.from('synagogues').insert(toDB(newSyn))
+          .then(({ error }) => { if (error) alert('שגיאה בהוספה — ' + error.message); });
+      }
+      const next = [...prev, newSyn].sort((a, b) => a.id - b.id);
+      if (!supabase) {
+        try { localStorage.setItem(LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      }
+      return next;
+    });
+  }, []);
 
   const removeSynagogue = useCallback(async (id: number) => {
     if (supabase) {
       const { error } = await supabase.from('synagogues').delete().eq('id', id);
       if (error) { alert('שגיאה במחיקה — ' + error.message); return; }
     }
-    save(synagogues.filter(s => s.id !== id));
-  }, [synagogues]);
+    saveLocal(prev => prev.filter(s => s.id !== id));
+  }, [saveLocal]);
 
   return { synagogues, updateSynagogue, addSynagogue, removeSynagogue, loaded };
 }
