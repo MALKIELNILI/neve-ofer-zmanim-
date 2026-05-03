@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTitleStyle, FONT_VARS, FONT_LABELS, type TitleStyle } from '@/hooks/useTitleStyle';
 const FONTS: TitleStyle['font'][] = ['Suez', 'NotoSerif', 'Frank', 'Heebo', 'Rubik', 'Alef', 'Secular', 'Assistant'];
@@ -15,23 +15,62 @@ interface TitleProps { isAdmin?: boolean; }
 export function TitleSection({ isAdmin }: TitleProps) {
   const { style, update } = useTitleStyle();
   const [showPicker, setShowPicker] = useState(false);
+  const [lightbox, setLightbox] = useState(false);
+
+  // Close lightbox with Escape
+  useEffect(() => {
+    if (!lightbox) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightbox(false); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightbox]);
   const fontFamily = FONT_VARS[style.font];
   const alignClass = { right: 'text-right', center: 'text-center', left: 'text-left' }[style.align];
 
   return (
     <div className="relative w-full">
-      {/* Aron Kodesh image */}
-      <div className="relative h-60 w-full overflow-hidden">
+      {/* Aron Kodesh image — click to enlarge */}
+      <div
+        className="relative h-60 w-full overflow-hidden cursor-zoom-in"
+        onClick={() => setLightbox(true)}
+      >
         <Image src="/aron-kodesh.png" alt="ארון קודש" fill className="object-contain object-center pt-2" priority />
         <div className="absolute inset-0 bg-gradient-to-b from-navy-900/20 via-transparent to-navy-900" />
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-slate-500/60 select-none pointer-events-none">
+          לחץ להגדלה
+        </div>
       </div>
 
       {/* כפתור סודי על הכתר — גישת מנהל */}
       <button
-        onClick={() => window.dispatchEvent(new CustomEvent('open-admin'))}
+        onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('open-admin')); }}
         className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-16 opacity-0 cursor-default z-10"
         aria-hidden="true"
       />
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setLightbox(false)}
+        >
+          <div className="relative max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <Image
+              src="/aron-kodesh.png"
+              alt="ארון קודש"
+              width={500}
+              height={700}
+              className="object-contain rounded-2xl w-full h-auto max-h-[85vh]"
+            />
+            <button
+              onClick={() => setLightbox(false)}
+              className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-black/60 text-white text-lg hover:bg-black/80 transition-colors"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Settings button — רק למנהל ראשי */}
       {isAdmin && (

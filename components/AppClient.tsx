@@ -14,6 +14,7 @@ import { AnnouncementsSection } from './AnnouncementsSection';
 import { YahreitBanner } from './YahreitBanner';
 import { AdminBar } from './AdminBar';
 import { HalachaSection } from './HalachaSection';
+import { OmerSection } from './OmerSection';
 import { ScrollToTop } from './ScrollToTop';
 import { InstructionsButton } from './InstructionsModal';
 
@@ -40,6 +41,7 @@ export function AppClient() {
   return (
     <>
       <TitleSection isAdmin={isAdmin} />
+      <OmerSection />
       <DateHeader />
       <YahreitBanner isAdmin={isAdmin} />
       <SearchSection synagogues={synagogues} zmanim={zmanim} activeFilter={activeFilter} onFilterChange={(k) => setActiveFilter(k as FilterKey)} />
